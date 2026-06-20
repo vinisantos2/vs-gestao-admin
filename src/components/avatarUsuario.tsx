@@ -1,5 +1,12 @@
-import React from "react";
-import { Alert, Image, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { selecionarImagem } from "../services/uploadImagemService";
 
 interface AvatarUsuarioProps {
@@ -15,13 +22,22 @@ export function AvatarUsuario({
   editavel = false,
   onFotoSelecionada,
 }: AvatarUsuarioProps) {
-  const avatar = require("@/assets/images/avatar.png");
+  const [preview, setPreview] = useState<string | undefined>(foto);
+
+  useEffect(() => {
+    setPreview(foto);
+  }, [foto]);
+
   async function handleSelecionarImagem() {
     try {
       const uri = await selecionarImagem();
 
       if (!uri) return;
 
+      // mostra preview na hora
+      setPreview(uri);
+
+      // envia para tela pai salvar/uploadar
       if (onFotoSelecionada) {
         await onFotoSelecionada(uri);
       }
@@ -32,23 +48,35 @@ export function AvatarUsuario({
   }
 
   return (
-    <TouchableOpacity
-      activeOpacity={editavel ? 0.8 : 1}
-      onPress={editavel ? handleSelecionarImagem : undefined}
-      style={{
-        backgroundColor: "rgb(34, 129, 160)",
-        alignItems: "center",
-        borderRadius: 20,
-      }}
-    >
+    <View style={styles.container}>
       <Image
-        source={foto ? { uri: foto } : require("@/assets/images/avatar.png")}
+        source={
+          preview ? { uri: preview } : require("@/assets/images/avatar.png")
+        }
         style={{
           width: tamanho,
           height: tamanho,
           borderRadius: tamanho / 2,
         }}
       />
-    </TouchableOpacity>
+
+      {editavel && (
+        <TouchableOpacity onPress={handleSelecionarImagem}>
+          <Text style={styles.botaoTexto}>Atualizar foto</Text>
+        </TouchableOpacity>
+      )}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: "center",
+    gap: 10,
+  },
+  botaoTexto: {
+    color: "#0095f6", // azul estilo Instagram
+    fontSize: 14,
+    fontWeight: "600",
+  },
+});

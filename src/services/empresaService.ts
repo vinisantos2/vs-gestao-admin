@@ -75,8 +75,10 @@ export async function criarServico(data: ServiceCreate) {
   }
 }
 
-export async function getEmpresaByUser(userId: string) {
-  const q = query(collection(db, "empresas"), where("ownerId", "==", userId));
+export async function getEmpresaByUser(
+  userId: string,
+): Promise<Empresa | null> {
+  const q = query(collection(db, "empresas"), where("donoId", "==", userId));
 
   const snap = await getDocs(q);
 
@@ -87,7 +89,7 @@ export async function getEmpresaByUser(userId: string) {
   return {
     id: doc.id,
     ...doc.data(),
-  };
+  } as Empresa;
 }
 
 export async function updateEmpresa(empresaId: string, data: Partial<Empresa>) {

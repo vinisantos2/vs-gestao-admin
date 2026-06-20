@@ -8,17 +8,17 @@ const menus = [
   {
     titulo: "Perfil Pessoal",
     icon: "person",
-    rota: "/perfil",
+    rota: ROTAS.privado.perfil,
   },
   {
     titulo: "Dados da Empresa",
     icon: "business",
-    rota: "/empresa",
+    rota: ROTAS.privado.empresa,
   },
   {
     titulo: "Novo Serviço",
     icon: "add-circle",
-    rota: "/servicos/novo",
+    rota: ROTAS.privado.novoServico,
   },
   {
     titulo: "Meus Serviços",
@@ -33,7 +33,7 @@ const menus = [
   {
     titulo: "Financeiro",
     icon: "attach-money",
-    rota: "/financeiro",
+    rota: ROTAS.tabs.finaceiro,
   },
   {
     titulo: "Avaliações",

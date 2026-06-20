@@ -1,5 +1,5 @@
 import { useAuth } from "@/src/context/AuthContext";
-import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -45,7 +45,7 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="caixa"
+        name="financeiro"
         options={{
           title: "Caixa",
           tabBarIcon: ({ color, size }) => (
@@ -53,13 +53,12 @@ export default function TabLayout() {
           ),
         }}
       />
-
       <Tabs.Screen
-        name="comandas"
+        name="clientes"
         options={{
-          title: "Comandas",
+          title: "Clientes",
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="receipt-long" size={size} color={color} />
+            <FontAwesome5 name="user" size={size} color={color} />
           ),
         }}
       />
