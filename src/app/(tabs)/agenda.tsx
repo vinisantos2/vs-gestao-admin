@@ -1,31 +1,21 @@
+import EmpresaStatusCard from "@/src/components/EmpresaStatusCard";
 import AgendamentoCard from "@/src/components/ui/agendamentos/AgendamentoCard";
 import CalendarPicker from "@/src/components/ui/calendar/calendar-picker";
 import LoadingModal from "@/src/components/ui/loading-modal";
 import TextPadrao from "@/src/components/ui/text";
-import { ROTAS } from "@/src/constants/routes";
-
 import { useEmpresAdmin } from "@/src/hooks/admin/useEmpresaAdmin";
 import { getAgendamentosEmpresa } from "@/src/services/agendamentoService";
-import { getServicos } from "@/src/services/empresaService";
-
+import { getServicos, updateEmpresa } from "@/src/services/empresaService";
 import { Agendamento } from "@/src/types/Agendamento";
 import { Servico } from "@/src/types/servico";
-
 import { hojeBR } from "@/src/utils/date";
 import { Ionicons } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
-import { router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function Agenda() {
-  const { empresa } = useEmpresAdmin();
+  const { empresa, setEmpresa } = useEmpresAdmin();
   const focused = useIsFocused();
 
   const [loading, setLoading] = useState(false);
@@ -36,22 +26,22 @@ export default function Agenda() {
 
   useEffect(() => {
     async function carregar() {
-      if (!empresa) return;
+      if (!empresa?.id) return;
 
       try {
         setLoading(true);
 
-        const dados = await getAgendamentosEmpresa(empresa.id);
-        const servicosEmpresa = await getServicos(empresa.id);
+        const [dados, servicosEmpresa] = await Promise.all([
+          getAgendamentosEmpresa(empresa.id),
+          getServicos(empresa.id),
+        ]);
 
         setServicos(servicosEmpresa);
         setTodosAgendamentos(dados);
 
         const hoje = hojeBR();
         setDataSelecionada(hoje);
-
-        const filtrados = dados.filter((item) => item.data === hoje);
-        setAgendamentos(filtrados);
+        setAgendamentos(dados.filter((item) => item.data === hoje));
       } catch (error) {
         console.log("Erro ao carregar agenda:", error);
       } finally {
@@ -60,7 +50,7 @@ export default function Agenda() {
     }
 
     carregar();
-  }, [empresa, focused]);
+  }, [empresa?.id, focused]);
 
   function getNomeServico(id: string) {
     const servico = servicos.find((s) => s.id === id);
@@ -78,77 +68,47 @@ export default function Agenda() {
 
   function handleSelecionarData(data: string) {
     setDataSelecionada(data);
-
-    const filtrados = todosAgendamentos.filter((item) => item.data === data);
-    setAgendamentos(filtrados);
+    setAgendamentos(todosAgendamentos.filter((item) => item.data === data));
   }
 
-  const totalAgendamentos = agendamentos.length;
+  async function handleToggleEmpresa() {
+    if (!empresa?.id) return;
 
-  const totalClientes = useMemo(() => {
-    const nomes = new Set(
-      agendamentos.map(
-        (item) => item.clienteNome || item.clienteNome || item.clienteTelefone,
-      ),
-    );
-    return nomes.size;
-  }, [agendamentos]);
+    try {
+      setLoading(true);
 
-  const totalServicos = useMemo(() => {
-    const ids = new Set(servicos.map((item) => item.id));
-    return ids.size;
-  }, [agendamentos]);
+      const novoStatus = !empresa.aberto;
+
+      await updateEmpresa(empresa.id, {
+        aberto: novoStatus,
+      });
+
+      setEmpresa((prev) =>
+        prev
+          ? {
+              ...prev,
+              aberto: novoStatus,
+            }
+          : prev,
+      );
+    } catch (error) {
+      console.log("Erro ao atualizar status da empresa:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <ScrollView
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
-      {/* HEADER */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Agenda</Text>
-          <Text style={styles.description}>
-            Gerencie os agendamentos da sua empresa por data.
-          </Text>
-        </View>
+      <EmpresaStatusCard
+        aberto={empresa?.aberto}
+        loading={loading}
+        onToggle={handleToggleEmpresa}
+      />
 
-        <TouchableOpacity style={styles.iconButton}>
-          <Ionicons name="add" size={20} color="#fff" />
-        </TouchableOpacity>
-      </View>
-
-      {/* RESUMO */}
-      <View style={styles.cardsRow}>
-        <View style={styles.cardResumo}>
-          <View style={[styles.iconBox, { backgroundColor: "#DBEAFE" }]}>
-            <Ionicons name="calendar-outline" size={20} color="#2563EB" />
-          </View>
-          <Text style={styles.cardLabel}>Agendamentos</Text>
-          <Text style={styles.cardValue}>{totalAgendamentos}</Text>
-        </View>
-
-        <View style={styles.cardResumo}>
-          <View style={[styles.iconBox, { backgroundColor: "#DCFCE7" }]}>
-            <Ionicons name="people-outline" size={20} color="#16A34A" />
-          </View>
-          <Text style={styles.cardLabel}>Clientes</Text>
-          <Text style={styles.cardValue}>{totalClientes}</Text>
-        </View>
-
-        <View
-          style={styles.cardResumo}
-          onTouchStart={() => router.push(ROTAS.privado.servicos)}
-        >
-          <View style={[styles.iconBox, { backgroundColor: "#FEF3C7" }]}>
-            <Ionicons name="cut-outline" size={20} color="#D97706" />
-          </View>
-          <Text style={styles.cardLabel}>Serviços</Text>
-          <Text style={styles.cardValue}>{totalServicos}</Text>
-        </View>
-      </View>
-
-      {/* CALENDÁRIO */}
       <View style={styles.calendarContainer}>
         <CalendarPicker
           dataSelecionada={dataSelecionada}
@@ -156,7 +116,6 @@ export default function Agenda() {
         />
       </View>
 
-      {/* INFO DA DATA */}
       <View style={styles.infoContainer}>
         <TextPadrao style={styles.subtitle}>
           Agendamentos de {dataSelecionada}
@@ -169,7 +128,6 @@ export default function Agenda() {
         </Text>
       </View>
 
-      {/* LISTA */}
       {agendamentos.length === 0 ? (
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIcon}>
@@ -209,71 +167,6 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
 
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 18,
-  },
-
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#111827",
-  },
-
-  description: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginTop: 4,
-    maxWidth: 260,
-  },
-
-  iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: "#2563EB",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  cardsRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 20,
-  },
-
-  cardResumo: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-
-  iconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-
-  cardLabel: {
-    fontSize: 13,
-    color: "#6B7280",
-    marginBottom: 4,
-  },
-
-  cardValue: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#111827",
-  },
-
   calendarContainer: {
     backgroundColor: "#fff",
     borderRadius: 20,
@@ -281,7 +174,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderWidth: 1,
     borderColor: "#E5E7EB",
-
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -317,7 +209,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#E5E7EB",
-
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,

@@ -1,9 +1,10 @@
 import { auth } from "@/src/firebase/config";
 import { getEmpresaByUser } from "@/src/services/empresaService";
+import { Empresa } from "@/src/types/empresa";
 import { useEffect, useState } from "react";
 
 export function useEmpresAdmin() {
-  const [empresa, setEmpresa] = useState<any>(null);
+  const [empresa, setEmpresa] = useState<Empresa | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,5 +28,6 @@ export function useEmpresAdmin() {
   return {
     empresa,
     loading,
+    setEmpresa,
   };
 }

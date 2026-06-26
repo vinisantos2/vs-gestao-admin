@@ -35,7 +35,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="agenda"
+        name="index"
         options={{
           title: "Agenda",
           tabBarIcon: ({ color, size }) => (
@@ -47,18 +47,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="financeiro"
         options={{
+          href: null,
           title: "Caixa",
           tabBarIcon: ({ color, size }) => (
             <FontAwesome5 name="cash-register" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="clientes"
-        options={{
-          title: "Clientes",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="user" size={size} color={color} />
           ),
         }}
       />

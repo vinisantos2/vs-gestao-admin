@@ -1,6 +1,11 @@
 import { storage } from "@/src/firebase/config";
 import * as ImagePicker from "expo-image-picker";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import {
+  deleteObject,
+  getDownloadURL,
+  ref,
+  uploadBytes,
+} from "firebase/storage";
 
 export async function selecionarImagem() {
   const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -34,4 +39,9 @@ export async function uploadImagem(
   await uploadBytes(arquivoRef, blob);
 
   return await getDownloadURL(arquivoRef);
+}
+
+export async function deletarImagem(caminho: string): Promise<void> {
+  const arquivoRef = ref(storage, caminho);
+  await deleteObject(arquivoRef);
 }

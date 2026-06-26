@@ -1,3 +1,11 @@
+import { ImagemSelecionavel } from "@/src/components/imagemSelecionavel";
+import FormContainer from "@/src/components/ui/form-container";
+import { uploadImagem } from "@/src/services/uploadImagemService";
+import {
+  atualizarUsuario,
+  getUsuarioAtual,
+} from "@/src/services/usuarioService";
+import { Usuario } from "@/src/types/usuario";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -9,17 +17,9 @@ import {
   TouchableOpacity,
 } from "react-native";
 
-
-import {
-  atualizarUsuario,
-  getUsuarioAtual,
-} from "@/src/services/usuarioService";
-
-import { AvatarUsuario } from "@/src/components/avatarUsuario";
-import { Usuario } from "@/src/types/usuario";
-
 export default function Perfil() {
   const [loading, setLoading] = useState(true);
+  const [salvando, setSalvando] = useState(false);
 
   const [usuario, setUsuario] = useState<Usuario>({
     id: "",
@@ -29,6 +29,9 @@ export default function Perfil() {
     telefone: "",
     tipo: "cliente",
   });
+
+  // guarda a imagem escolhida localmente antes de salvar
+  const [imagemSelecionada, setImagemSelecionada] = useState<string>("");
 
   async function carregarDados() {
     try {
@@ -46,11 +49,36 @@ export default function Perfil() {
 
   async function salvar() {
     try {
-      await atualizarUsuario(usuario);
+      setSalvando(true);
+
+      let imagemUrl = usuario.imagem || "";
+
+      // se escolheu uma imagem nova local, faz upload
+      if (imagemSelecionada && !imagemSelecionada.startsWith("https")) {
+        imagemUrl = await uploadImagem(
+          imagemSelecionada,
+          `usuarios/${usuario.id}/avatar`,
+        );
+      }
+
+      await atualizarUsuario({
+        ...usuario,
+        imagem: imagemUrl,
+      });
+
+      setUsuario((prev) => ({
+        ...prev,
+        imagem: imagemUrl,
+      }));
+
+      setImagemSelecionada("");
 
       Alert.alert("Sucesso", "Perfil atualizado.");
     } catch (error) {
+      console.log(error);
       Alert.alert("Erro", "Falha ao atualizar perfil.");
+    } finally {
+      setSalvando(false);
     }
   }
 
@@ -65,32 +93,53 @@ export default function Perfil() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.titulo}>Meu Perfil</Text>
-      <AvatarUsuario foto={usuario.imagem} tamanho={120} editavel />
+
+      <ImagemSelecionavel
+        imagem={imagemSelecionada || usuario.imagem}
+        largura={120}
+        altura={120}
+        circular
+        editavel
+        textoBotao="Atualizar foto"
+        onImagemSelecionada={(uri) => setImagemSelecionada(uri)}
+      />
 
       <Text style={styles.label}>Nome</Text>
-      <TextInput
-        style={styles.input}
-        value={usuario.nome}
-        onChangeText={(text) => setUsuario({ ...usuario, nome: text })}
-      />
+      <FormContainer>
+        <TextInput
+          style={styles.input}
+          value={usuario.nome}
+          onChangeText={(text) => setUsuario({ ...usuario, nome: text })}
+        />
 
-      <Text style={styles.label}>Email</Text>
-      <TextInput style={styles.input} editable={false} value={usuario.email} />
+        <Text style={styles.label}>Email</Text>
+        <TextInput
+          style={styles.input}
+          editable={false}
+          value={usuario.email}
+        />
 
-      <Text style={styles.label}>Telefone</Text>
-      <TextInput
-        style={styles.input}
-        keyboardType="phone-pad"
-        value={usuario.telefone}
-        onChangeText={(text) => setUsuario({ ...usuario, telefone: text })}
-      />
+        <Text style={styles.label}>Telefone</Text>
+        <TextInput
+          style={styles.input}
+          keyboardType="phone-pad"
+          value={usuario.telefone}
+          onChangeText={(text) => setUsuario({ ...usuario, telefone: text })}
+        />
 
-      <Text style={styles.label}>Tipo de Conta</Text>
-      <TextInput style={styles.input} editable={false} value={usuario.tipo} />
+        <Text style={styles.label}>Tipo de Conta</Text>
+        <TextInput style={styles.input} editable={false} value={usuario.tipo} />
 
-      <TouchableOpacity style={styles.botao} onPress={salvar}>
-        <Text style={styles.botaoTexto}>Salvar Alterações</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.botao, salvando && styles.botaoDisabled]}
+          onPress={salvar}
+          disabled={salvando}
+        >
+          <Text style={styles.botaoTexto}>
+            {salvando ? "Salvando..." : "Salvar Alterações"}
+          </Text>
+        </TouchableOpacity>
+      </FormContainer>
     </ScrollView>
   );
 }
@@ -98,6 +147,7 @@ export default function Perfil() {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
+    gap: 4,
   },
 
   titulo: {
@@ -129,6 +179,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#2563eb",
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  botaoDisabled: {
+    opacity: 0.7,
   },
 
   botaoTexto: {

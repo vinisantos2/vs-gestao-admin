@@ -3,7 +3,7 @@ export type Servico = {
   imagem?: string;
   empresaId: string;
   nome: string;
-  preco: number;
+  preco: string;
   duracao: number;
   ativo: boolean;
 };

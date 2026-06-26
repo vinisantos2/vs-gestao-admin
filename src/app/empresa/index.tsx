@@ -1,6 +1,7 @@
-import { AvatarUsuario } from "@/src/components/avatarUsuario";
+import { EmpresaForm } from "@/src/components/forms/EmpresaForm";
 import { auth } from "@/src/firebase/config";
 import { getEmpresaByUser, updateEmpresa } from "@/src/services/empresaService";
+import { uploadImagem } from "@/src/services/uploadImagemService";
 import { Empresa } from "@/src/types/empresa";
 import { toastInfo } from "@/src/utils/toast";
 import { useEffect, useState } from "react";
@@ -9,9 +10,6 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -23,12 +21,15 @@ const empresaInicial: Empresa = {
   endereco: "",
   categoria: "",
   logoUrl: "",
+  aberto: true,
+  horario: "",
 };
 
 export default function EmpresaScreen() {
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [empresa, setEmpresa] = useState<Empresa>(empresaInicial);
+  const [logoSelecionada, setLogoSelecionada] = useState("");
 
   useEffect(() => {
     carregarEmpresa();
@@ -52,8 +53,10 @@ export default function EmpresaScreen() {
           ...dados,
           donoId: dados.donoId || user.uid,
         });
+
+        // se quiser já mostrar a logo existente no preview, pode deixar assim:
+        setLogoSelecionada(dados.logoUrl || "");
       } else {
-        // se não existir empresa ainda, já monta uma base vazia
         setEmpresa({
           ...empresaInicial,
           donoId: user.uid,
@@ -67,16 +70,23 @@ export default function EmpresaScreen() {
     }
   }
 
-  async function atualizarLogo(uri: string) {
-    try {
-      setEmpresa((prev) => ({
-        ...prev,
-        logoUrl: uri,
-      }));
-    } catch (error) {
-      console.log(error);
-      Alert.alert("Erro", "Não foi possível atualizar a logo.");
-    }
+  function handleChange<K extends keyof Empresa>(field: K, value: Empresa[K]) {
+    setEmpresa((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  }
+
+  function handleSelecionarImagem(uri: string) {
+    setLogoSelecionada(uri);
+  }
+
+  function handleRemoverImagem() {
+    setLogoSelecionada("");
+    setEmpresa((prev) => ({
+      ...prev,
+      logoUrl: "",
+    }));
   }
 
   async function salvarEmpresa() {
@@ -96,22 +106,37 @@ export default function EmpresaScreen() {
 
       setSalvando(true);
 
+      let logoUrl = empresa.logoUrl || "";
+
+      // se escolheu uma nova imagem local, faz upload
+      if (logoSelecionada && !logoSelecionada.startsWith("https")) {
+        logoUrl = await uploadImagem(
+          logoSelecionada,
+          `empresas/${empresa.id || user.uid}/logo`,
+        );
+      }
+
       const dadosParaSalvar: Empresa = {
         ...empresa,
         donoId: user.uid,
+        logoUrl,
       };
 
-      console.log("Salvar empresa:", dadosParaSalvar);
       const id = dadosParaSalvar.id;
       if (!id) {
-        toastInfo("Erro empresa sem id:" + id);
+        toastInfo("Erro: empresa sem id");
         return;
       }
 
-      updateEmpresa(id, dadosParaSalvar);
+      await updateEmpresa(id, dadosParaSalvar);
 
-      // depois você liga aqui:
-      // await saveEmpresa(dadosParaSalvar);
+      setEmpresa((prev) => ({
+        ...prev,
+        logoUrl,
+      }));
+
+      // depois de salvar, deixa a imagem selecionada apontando pra URL final
+      setLogoSelecionada(logoUrl);
 
       Alert.alert("Sucesso", "Dados da empresa salvos com sucesso.");
     } catch (error) {
@@ -135,92 +160,16 @@ export default function EmpresaScreen() {
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.titulo}>Dados da Empresa</Text>
-
-      <AvatarUsuario
-        foto={empresa.logoUrl}
-        tamanho={110}
-        editavel
-        onFotoSelecionada={atualizarLogo}
+      <EmpresaForm
+        empresa={empresa}
+        imagemSelecionada={logoSelecionada}
+        onChange={handleChange}
+        onSelecionarImagem={handleSelecionarImagem}
+        onRemoverImagem={handleRemoverImagem}
+        onSubmit={salvarEmpresa}
+        loading={salvando}
+        isEdicao
       />
-
-      <View style={styles.form}>
-        <View>
-          <Text style={styles.label}>Nome da empresa</Text>
-          <TextInput
-            value={empresa.nomeEmpresa}
-            onChangeText={(text) =>
-              setEmpresa((prev) => ({ ...prev, nomeEmpresa: text }))
-            }
-            placeholder="Digite o nome da empresa"
-            style={styles.input}
-          />
-        </View>
-
-        <View>
-          <Text style={styles.label}>Telefone</Text>
-          <TextInput
-            value={empresa.telefone}
-            onChangeText={(text) =>
-              setEmpresa((prev) => ({ ...prev, telefone: text }))
-            }
-            placeholder="Digite o telefone"
-            keyboardType="phone-pad"
-            style={styles.input}
-          />
-        </View>
-
-        <View>
-          <Text style={styles.label}>Categoria</Text>
-          <TextInput
-            value={empresa.categoria ?? ""}
-            onChangeText={(text) =>
-              setEmpresa((prev) => ({ ...prev, categoria: text }))
-            }
-            placeholder="Ex: Barbearia, Salão, Restaurante..."
-            style={styles.input}
-          />
-        </View>
-
-        <View>
-          <Text style={styles.label}>Endereço</Text>
-          <TextInput
-            value={empresa.endereco ?? ""}
-            onChangeText={(text) =>
-              setEmpresa((prev) => ({ ...prev, endereco: text }))
-            }
-            placeholder="Digite o endereço"
-            style={styles.input}
-          />
-        </View>
-
-        <View>
-          <Text style={styles.label}>Descrição</Text>
-          <TextInput
-            value={empresa.descricao ?? ""}
-            onChangeText={(text) =>
-              setEmpresa((prev) => ({ ...prev, descricao: text }))
-            }
-            placeholder="Fale um pouco sobre a empresa"
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-            style={[styles.input, styles.textArea]}
-          />
-        </View>
-
-        <TouchableOpacity
-          style={styles.botao}
-          onPress={salvarEmpresa}
-          disabled={salvando}
-        >
-          {salvando ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.botaoTexto}>Salvar dados</Text>
-          )}
-        </TouchableOpacity>
-      </View>
     </ScrollView>
   );
 }
@@ -228,7 +177,6 @@ export default function EmpresaScreen() {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    gap: 20,
     backgroundColor: "#fff",
     flexGrow: 1,
   },
@@ -236,45 +184,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  titulo: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#111827",
-    textAlign: "center",
-  },
-  form: {
-    gap: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 6,
-    color: "#374151",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    backgroundColor: "#fff",
-  },
-  textArea: {
-    minHeight: 110,
-  },
-  botao: {
-    backgroundColor: "#2563eb",
-    height: 50,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 8,
-  },
-  botaoTexto: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
   },
 });

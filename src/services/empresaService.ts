@@ -54,7 +54,7 @@ export async function getEmpresa(empresaId: string): Promise<Empresa | null> {
   } as Empresa;
 }
 
-export async function criarServico(data: ServiceCreate) {
+export async function criarServico(data: ServiceCreate): Promise<string> {
   if (!data.empresaId) {
     throw new Error("Empresa não identificada");
   }
@@ -148,11 +148,7 @@ export async function getServicoById(
 export async function atualizarServico(servico: Servico) {
   const ref = doc(db, "empresas", servico.empresaId, "servicos", servico.id);
 
-  await updateDoc(ref, {
-    nome: servico.nome,
-    preco: servico.preco,
-    duracao: servico.duracao,
-  });
+  await updateDoc(ref, { ...servico });
 }
 
 export async function deletarServico(empresaId: string, servicoId: string) {

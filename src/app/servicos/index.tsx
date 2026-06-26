@@ -3,11 +3,19 @@ import ServicoCard from "@/src/components/ui/servicos/ServicoCard";
 import { ROTAS } from "@/src/constants/routes";
 import { useAuth } from "@/src/context/AuthContext";
 import { deletarServico, getServicos } from "@/src/services/empresaService";
+import { deletarImagem } from "@/src/services/uploadImagemService";
 import { Servico } from "@/src/types/servico";
 import { useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 export default function Servicos() {
   const [servicos, setServicos] = useState<Servico[]>([]);
@@ -47,12 +55,33 @@ export default function Servicos() {
     });
   }
 
+  function confirmarExclusao(servico: Servico) {
+    Alert.alert(
+      "Excluir serviço",
+      `Tem certeza que deseja excluir "${servico.nome}"? Essa ação não poderá ser desfeita.`,
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: () => handleExcluir(servico),
+        },
+      ],
+    );
+  }
+
   async function handleExcluir(servico: Servico) {
     if (!empresaId || !servico.id) return;
+
+    Alert.alert("Deseja exclui esse serviço: " + servico.nome);
 
     try {
       setLoading(true);
       await deletarServico(empresaId, servico.id);
+      if (servico.imagem) await deletarImagem(servico.imagem);
 
       setServicos((estadoAtual) =>
         estadoAtual.filter((item) => item.id !== servico.id),
@@ -97,7 +126,7 @@ export default function Servicos() {
             <ServicoCard
               servico={item}
               onEditar={handleEditar}
-              onExcluir={handleExcluir}
+              onExcluir={confirmarExclusao}
             />
           )}
           contentContainerStyle={[

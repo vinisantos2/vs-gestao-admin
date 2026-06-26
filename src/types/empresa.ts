@@ -8,4 +8,6 @@ export interface Empresa {
   categoria?: string;
   logoUrl?: string;
   criadoEm?: Date;
+  aberto: boolean;
+  horario: string;
 }

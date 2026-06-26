@@ -1,33 +1,35 @@
+import type { Href } from "expo-router";
+type Rota = Href;
 export const ROTAS = {
   index: "/",
 
   publico: {
-    login: "/(publico)/login",
-    cadastro: "/(publico)/register",
+    login: "/(publico)/login" as Rota,
+    cadastro: "/(publico)/register" as Rota,
     empresa: (idEmpresa: string) => ({
-      pathname: "/(publico)/empresa" as const,
+      pathname: "/(publico)/empresa" as Rota,
       params: { id: idEmpresa },
     }),
   },
+
   tabs: {
-    agendamentos: "/(tabs)/agenda",
-    finaceiro: "/(tabs)/financeiro",
-    comandas: "/(tabs)/comandas",
-    novoServico: "/(tabs)/servicos/cadastro",
+    agendamentos: "/(tabs)/agenda" as Rota,
+    finaceiro: "/(tabs)/financeiro" as Rota,
+    novoServico: "/(tabs)/servicos/cadastro" as Rota,
     menu: "/(tabs)/menu",
     editarAgendamento: (idAgendamento: string) => ({
-      pathname: "/(admin)/agendamentos/cadastro" as const,
+      pathname: "/(admin)/agendamentos/cadastro" as Rota,
       params: { id: idAgendamento },
     }),
   },
 
   privado: {
-    perfil: "/perfil",
-    empresa: "/empresa",
-    servicos: "/servicos",
-    novoServico: "/servicos/cadastro",
+    perfil: "/perfil" as Rota,
+    empresa: "/empresa" as Rota,
+    servicos: "/servicos" as Rota,
+    novoServico: "/servicos/cadastro" as Rota,
     editarServico: (idServico: string) => ({
-      pathname: "/servicos/cadastro" as const,
+      pathname: "/servicos/cadastro" as Rota,
       params: { id: idServico },
     }),
   },
