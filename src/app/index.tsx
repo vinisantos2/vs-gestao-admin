@@ -23,7 +23,7 @@ export default function Index() {
     return <Redirect href={ROTAS.publico.login} />;
   }
 
-  return <Redirect href={"/(tabs)"} />;
+  return <Redirect href={ROTAS.tabs.agendamentos} />;
 }
 
 const styles = StyleSheet.create({
