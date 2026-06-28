@@ -71,7 +71,12 @@ export default function InputPadrao({
   return (
     <TextInput
       {...props}
-      style={[styles.input, props.style]}
+      multiline={props.multiline}
+      style={[
+        styles.input,
+        props.multiline && styles.inputMultiline,
+        props.style,
+      ]}
       placeholderTextColor="#9CA3AF"
     />
   );
@@ -88,5 +93,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     color: "#000",
     fontSize: 16,
+  },
+  inputMultiline: {
+    height: 100,
+    paddingTop: 12,
+    textAlignVertical: "top",
   },
 });

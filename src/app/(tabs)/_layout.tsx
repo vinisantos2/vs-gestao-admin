@@ -35,7 +35,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="agenda"
         options={{
           title: "Agenda",
           tabBarIcon: ({ color, size }) => (

@@ -4,10 +4,13 @@ import { getEmpresaByUser, updateEmpresa } from "@/src/services/empresaService";
 import { uploadImagem } from "@/src/services/uploadImagemService";
 import { Empresa } from "@/src/types/empresa";
 import { toastInfo } from "@/src/utils/toast";
+import * as Location from "expo-location";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   View,
@@ -30,6 +33,7 @@ export default function EmpresaScreen() {
   const [salvando, setSalvando] = useState(false);
   const [empresa, setEmpresa] = useState<Empresa>(empresaInicial);
   const [logoSelecionada, setLogoSelecionada] = useState("");
+  const [mostrarMapa, setMostrarMapa] = useState(false);
 
   useEffect(() => {
     carregarEmpresa();
@@ -70,13 +74,6 @@ export default function EmpresaScreen() {
     }
   }
 
-  function handleChange<K extends keyof Empresa>(field: K, value: Empresa[K]) {
-    setEmpresa((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  }
-
   function handleSelecionarImagem(uri: string) {
     setLogoSelecionada(uri);
   }
@@ -86,6 +83,43 @@ export default function EmpresaScreen() {
     setEmpresa((prev) => ({
       ...prev,
       logoUrl: "",
+    }));
+  }
+
+  async function handleSelecionarLocalizacao() {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert(
+          "Permissão necessária",
+          "Permita o acesso à localização para continuar.",
+        );
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.BestForNavigation,
+        distanceInterval: 0,
+        timeInterval: 5000,
+      });
+
+      handleChange("localizacao", {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      Alert.alert("Sucesso", "Localização capturada com sucesso.");
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Erro", "Não foi possível obter a localização.");
+    }
+  }
+
+  function handleChange<K extends keyof Empresa>(field: K, value: Empresa[K]) {
+    setEmpresa((prev) => ({
+      ...prev,
+      [field]: value,
     }));
   }
 
@@ -156,30 +190,33 @@ export default function EmpresaScreen() {
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <EmpresaForm
-        empresa={empresa}
-        imagemSelecionada={logoSelecionada}
-        onChange={handleChange}
-        onSelecionarImagem={handleSelecionarImagem}
-        onRemoverImagem={handleRemoverImagem}
-        onSubmit={salvarEmpresa}
-        loading={salvando}
-        isEdicao
-      />
-    </ScrollView>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          paddingBottom: 40,
+        }}
+      >
+        <EmpresaForm
+          onSelecionarLocalizacao={handleSelecionarLocalizacao}
+          empresa={empresa}
+          imagemSelecionada={logoSelecionada}
+          onChange={handleChange}
+          onSelecionarImagem={handleSelecionarImagem}
+          onRemoverImagem={handleRemoverImagem}
+          onSubmit={salvarEmpresa}
+          loading={salvando}
+          isEdicao
+        />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: "#fff",
-    flexGrow: 1,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",

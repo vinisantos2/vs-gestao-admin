@@ -9,7 +9,15 @@ import { uploadImagem } from "@/src/services/uploadImagemService";
 import { Servico } from "@/src/types/servico";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 const servicoInicial: Servico = {
   id: "",
@@ -169,37 +177,42 @@ export default function CadastroServico() {
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.header}>
-        <Text style={styles.title}>
-          {isEdicao ? "Editar serviço" : "Novo serviço"}
-        </Text>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>
+            {isEdicao ? "Editar serviço" : "Novo serviço"}
+          </Text>
 
-        <Text style={styles.subtitle}>
-          {isEdicao
-            ? "Atualize as informações do serviço cadastrado."
-            : "Cadastre um novo serviço para disponibilizar nos agendamentos."}
-        </Text>
-      </View>
+          <Text style={styles.subtitle}>
+            {isEdicao
+              ? "Atualize as informações do serviço cadastrado."
+              : "Cadastre um novo serviço para disponibilizar nos agendamentos."}
+          </Text>
+        </View>
 
-      <ServicoForm
-        servico={servico}
-        imagemSelecionada={imagemSelecionada}
-        onSelecionarImagem={setImagemSelecionada}
-        onRemoverImagem={() => {
-          setImagemSelecionada("");
-          updateField("imagem", "");
-        }}
-        onChange={updateField}
-        onSubmit={handleSalvar}
-        loading={loading}
-        isEdicao={isEdicao}
-      />
-    </ScrollView>
+        <ServicoForm
+          servico={servico}
+          imagemSelecionada={imagemSelecionada}
+          onSelecionarImagem={setImagemSelecionada}
+          onRemoverImagem={() => {
+            setImagemSelecionada("");
+            updateField("imagem", "");
+          }}
+          onChange={updateField}
+          onSubmit={handleSalvar}
+          loading={loading}
+          isEdicao={isEdicao}
+        />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

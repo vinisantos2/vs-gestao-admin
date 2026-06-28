@@ -1,3 +1,5 @@
+import { Localizacao } from "./localizacao";
+
 export interface Empresa {
   id?: string;
   nomeEmpresa: string;
@@ -10,4 +12,6 @@ export interface Empresa {
   criadoEm?: Date;
   aberto: boolean;
   horario: string;
+
+  localizacao?: Localizacao;
 }

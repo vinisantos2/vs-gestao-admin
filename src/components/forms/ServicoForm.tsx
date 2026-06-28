@@ -1,5 +1,4 @@
 import { ImagemSelecionavel } from "@/src/components/imagemSelecionavel";
-import FormContainer from "@/src/components/ui/form-container";
 import InputPadrao from "@/src/components/ui/input-padrao";
 import { Servico } from "@/src/types/servico";
 import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
@@ -26,7 +25,7 @@ export function ServicoForm({
   isEdicao = false,
 }: Props) {
   return (
-    <FormContainer>
+    <View style={styles.container}>
       {/* IMAGEM */}
       <View style={styles.fieldGroup}>
         <Text style={styles.label}>Imagem do serviço</Text>
@@ -125,11 +124,17 @@ export function ServicoForm({
               : "Salvar serviço"}
         </Text>
       </Pressable>
-    </FormContainer>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+    backgroundColor: "#fff",
+  },
   fieldGroup: {
     marginBottom: 18,
   },
