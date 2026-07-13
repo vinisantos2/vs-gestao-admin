@@ -1,4 +1,10 @@
-export type StatusAgendamento = "confirmado" | "cancelado" | "pendente";
+export type StatusAgendamento =
+  | "agendado"
+  | "esperando"
+  | "atendimento"
+  | "finalizado"
+  | "cancelado"
+  | "faltou";
 
 export type Agendamento = {
   id?: string;
@@ -11,7 +17,7 @@ export type Agendamento = {
   inicio: string; // 🔥 "10:00"
   fim: string; // 🔥 "10:30"
 
-  clienteNome: string;
+  clienteNome?: string;
   clienteTelefone?: string;
 
   userId?: string;

@@ -138,3 +138,25 @@ export async function getAgendamentosByData(
     return [];
   }
 }
+
+export async function getFilaDoDia(
+  empresaId: string,
+  data: string,
+): Promise<Agendamento[]> {
+  const ref = collection(db, "agendamentos");
+
+  const q = query(
+    ref,
+    where("empresaId", "==", empresaId),
+    where("data", "==", data),
+    where("origem", "==", "fila"),
+    where("status", "==", "aguardando"),
+  );
+
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Agendamento[];
+}

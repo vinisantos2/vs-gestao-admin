@@ -12,6 +12,5 @@ export interface Empresa {
   criadoEm?: Date;
   aberto: boolean;
   horario: string;
-
   localizacao?: Localizacao;
 }

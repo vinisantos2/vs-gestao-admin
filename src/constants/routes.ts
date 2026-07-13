@@ -6,10 +6,6 @@ export const ROTAS = {
   publico: {
     login: "/(publico)/login" as Rota,
     cadastro: "/(publico)/register" as Rota,
-    empresa: (idEmpresa: string) => ({
-      pathname: "/(publico)/empresa" as Rota,
-      params: { id: idEmpresa },
-    }),
   },
 
   tabs: {
@@ -17,19 +13,15 @@ export const ROTAS = {
     finaceiro: "/(tabs)/financeiro" as Rota,
     novoServico: "/(tabs)/servicos/cadastro" as Rota,
     menu: "/(tabs)/menu",
-    editarAgendamento: (idAgendamento: string) => ({
-      pathname: "/(admin)/agendamentos/cadastro" as Rota,
-      params: { id: idAgendamento },
-    }),
   },
 
   privado: {
-    perfil: "/perfil" as Rota,
-    empresa: "/empresa" as Rota,
-    servicos: "/servicos" as Rota,
-    novoServico: "/servicos/cadastro" as Rota,
+    perfil: "(privado)/perfil" as Rota,
+    empresa: "(privado)/empresa" as Rota,
+    servicos: "(privado)/servicos" as Rota,
+    novoServico: "(privado)/servicos/cadastro" as Rota,
     editarServico: (idServico: string) => ({
-      pathname: "/servicos/cadastro" as Rota,
+      pathname: "(privado)/servicos/cadastro" as Rota,
       params: { id: idServico },
     }),
   },
